@@ -21,6 +21,8 @@ namespace Potato{
 
 	class Graphics{
 	public:
+		SDL_Surface* display;
+		vector<RenderObject> assets;
 
 	private:
 		bool update;
@@ -34,9 +36,7 @@ namespace Potato{
 		Uint32 IMG_FLAGS;
 		Uint32 INIT_FLAGS;
 		Uint32 VIDEO_FLAGS;
-		SDL_Surface* display;
 		std::thread* renderThread;
-		vector<RenderObject> assets;
 		vector<vector<RenderObject*>> current;
 		vector<vector<RenderObject*>> pending;
 
@@ -45,7 +45,7 @@ namespace Potato{
 		~Graphics(void);
 
 		bool Initialise(void); // Done
-		void Update(void); // Done
+		void Update(vector<vector<RenderObject*>> renderLists); // Done
 		void Configure(map<string, vector<string>> options); // Done
 		void Cleanup(void); // Done
 
@@ -55,7 +55,6 @@ namespace Potato{
 		void LoadAssets(void); // Done
 		bool Render(RenderObject *object); // Done
 		void Renderloop(void); // Done
-		void Update(vector<vector<RenderObject*>> renderLists); // Done
 		map<string, vector<string>> ConfigSegments(void); // Done
 	};
 }

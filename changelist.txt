@@ -1,10 +1,15 @@
 Project:		Potato Graphics
 Programmer:		Kaleb McCall
 Company:		Potato Softworks
-Version:		0.2.0
-Date:			24 April 2013
+Version:		0.2.1
+Date:			1 September 2013
 
 Changelist:
+0.2.1:
+Started debugging.
+Found 4 bugs.
+Bugfix (bug #1): moved thread termination to top of cleanup and added a sleep call to allow time for thread to exit
+	
 0.2.0:
 Compiled debug build.
 Changed Potato::Graphics::Initialise to include checking for loaded libraries success.

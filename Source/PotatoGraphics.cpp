@@ -294,23 +294,24 @@ namespace Potato{
 		SDL_Rect output;
 		SDL_Rect input;
 
-		(*object).Animate(); // Check if the objects sprite is up-to-date
+		LogMessage("RENDER THREAD: DRAWING...");
+		object->Animate(); // Check if the objects sprite is up-to-date
 
-		if ((*object).sprite == NULL)
+		if (object->sprite == NULL)
 		{
 			return false;
 		}
 
-		output.x = (*object).coordinate.x;
-		output.y = (*object).coordinate.y;
+		output.x = object->coordinate.x;
+		output.y = object->coordinate.y;
 
-		input.x = (*object).locations[(*object).state-1].x;
-		input.x = (*object).locations[(*object).state-1].y;
-		input.w = (*object).sizes[(*object).state-1].x;
-		input.h = (*object).sizes[(*object).state-1].y;
+		input.x = object->locations[object->state-1].x;
+		input.y = object->locations[object->state-1].y;
+		input.w = object->sizes[object->state-1].x;
+		input.h = object->sizes[object->state-1].y;
 
 
-		SDL_BlitSurface((*object).sprite, &input, display, &output);
+		SDL_BlitSurface(object->sprite, &input, display, &output);
 
 		return true;
 	}
@@ -323,10 +324,12 @@ namespace Potato{
 		{
 			if (update && !locked)
 			{
+				LogMessage("RENDER THREAD: UPDATING...");
 				locked = true;
 				current.clear();
 				current = pending;
 				locked = false;
+				update = false;
 			}
 
 			for (auto renderlist : current)
@@ -336,7 +339,7 @@ namespace Potato{
 					Render(object); // Possible DLL error?
 				}
 			}
-
+			SDL_Flip(display);
 		}
 	}
 
@@ -447,10 +450,22 @@ namespace Potato{
 	}
 }
 
+vector<vector<Potato::RenderObject*>> makeTestObject(Potato::RenderObject* obj) {
+	vector<Potato::RenderObject*> list;
+	list.push_back(obj);
+	vector<vector<Potato::RenderObject*>> list2;
+	list2.push_back(list);
+	return list2;
+}
+
 int _tmain(int argc, _TCHAR* argv[])
 {
 	Potato::Graphics engine;
 	engine.Initialise();
+	Potato::RenderObject *bg;
+	bg = &engine.assets[0];
+	engine.Update(makeTestObject(bg));
+	Sleep(10000);
 	engine.Cleanup();
 	logFile.close();
 	return 0;
