@@ -1,0 +1,10 @@
+﻿  PotatoGraphics.cpp
+PotatoGraphics.cpp(50): warning C4018: '<' : signed/unsigned mismatch
+PotatoGraphics.cpp(40): warning C4101: 'startTick' : unreferenced local variable
+PotatoGraphics.cpp(42): warning C4101: 'timeElapsed' : unreferenced local variable
+PotatoGraphics.cpp(348): warning C4101: 'area' : unreferenced local variable
+  Generating code
+  Finished generating code
+PotatoLibrary.lib(Strings.obj) : warning LNK4204: 'C:\Users\Fearless Hornet\My Software\Graphics Engine\Source\Release\vc110.pdb' is missing debugging information for referencing module; linking object as if no debug info
+PotatoLibrary.lib(stdafx.obj) : warning LNK4204: 'C:\Users\Fearless Hornet\My Software\Graphics Engine\Source\Release\vc110.pdb' is missing debugging information for referencing module; linking object as if no debug info
+  PotatoGraphics.vcxproj -> C:\Users\Fearless Hornet\My Software\Graphics Engine\Source\Release\PotatoGraphics.exe

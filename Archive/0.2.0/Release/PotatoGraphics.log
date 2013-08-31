@@ -1,0 +1,9 @@
+﻿  stdafx.cpp
+  PotatoGraphics.cpp
+PotatoGraphics.cpp(40): warning C4018: '<' : signed/unsigned mismatch
+PotatoGraphics.cpp(30): warning C4101: 'startTick' : unreferenced local variable
+PotatoGraphics.cpp(32): warning C4101: 'timeElapsed' : unreferenced local variable
+PotatoGraphics.cpp(324): warning C4101: 'area' : unreferenced local variable
+PotatoGraphics.obj : error LNK2001: unresolved external symbol "public: __thiscall Potato::RenderObject::RenderObject(void)" (??0RenderObject@Potato@@QAE@XZ)
+PotatoGraphics.obj : error LNK2001: unresolved external symbol "public: __thiscall Potato::RenderObject::~RenderObject(void)" (??1RenderObject@Potato@@QAE@XZ)
+C:\Users\Fearless Hornet\My Software\Graphics Engine\Source\Release\PotatoGraphics.exe : fatal error LNK1120: 2 unresolved externals

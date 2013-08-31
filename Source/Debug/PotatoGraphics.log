@@ -1,0 +1,13 @@
+﻿  PotatoGraphics.cpp
+c:\users\fearless hornet\my software\graphics engine\source\potatographics.cpp(50): warning C4018: '<' : signed/unsigned mismatch
+c:\users\fearless hornet\my software\graphics engine\source\potatographics.cpp(40): warning C4101: 'startTick' : unreferenced local variable
+c:\users\fearless hornet\my software\graphics engine\source\potatographics.cpp(42): warning C4101: 'timeElapsed' : unreferenced local variable
+c:\users\fearless hornet\my software\graphics engine\source\potatographics.cpp(348): warning C4101: 'area' : unreferenced local variable
+  PotatoLibrary.lib(Strings.obj) : MSIL .netmodule or module compiled with /GL found; restarting link with /LTCG; add /LTCG to the link command line to improve linker performance
+LINK : warning LNK4075: ignoring '/INCREMENTAL' due to '/LTCG' specification
+PotatoGraphics.obj : warning LNK4075: ignoring '/EDITANDCONTINUE' due to '/OPT:LBR' specification
+  Generating code
+  Finished generating code
+PotatoLibrary.lib(Strings.obj) : warning LNK4204: 'C:\Users\Fearless Hornet\My Software\Graphics Engine\Source\Debug\vc110.pdb' is missing debugging information for referencing module; linking object as if no debug info
+PotatoLibrary.lib(stdafx.obj) : warning LNK4204: 'C:\Users\Fearless Hornet\My Software\Graphics Engine\Source\Debug\vc110.pdb' is missing debugging information for referencing module; linking object as if no debug info
+  PotatoGraphics.vcxproj -> C:\Users\Fearless Hornet\My Software\Graphics Engine\Source\Debug\PotatoGraphics.exe

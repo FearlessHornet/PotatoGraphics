@@ -1,0 +1,12 @@
+Asset Manifest Template File
+
+Each line in the manifest file will be as follows:
+<NAME> <ANIMATION-FILE> <STATE-1> <STATE-2> ... <STATE-n>
+Where:
+<NAME> is the string in which humans can identify the asset
+<ANIMATION-FILE> is the string of the path to the animation file ie "/DATA/gfx/car.ttf"
+<STATE-x> is the xth animation state, set out as <x>,<y>,<w>,<h>,<TIME> where:
+				<x>,<y> are the coordinates of the surface in the file
+				<w> is the width of the image
+				<h> is the height of the image
+				<TIME> is the amount of time (in milliseconds) for that animation state, -1 if only one animation state

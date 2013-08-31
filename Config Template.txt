@@ -1,0 +1,19 @@
+This is the template for how the config file will be set out. The file will be collections of key headings [SomeKey] followed by a number of flags on each newline. The following example is what a config file would look like with n flags for a key Key1 and m values for a key Key2:
+[Key1]
+FLAG1
+FLAG2
+...
+FLAGn
+
+[Key2]
+OTHER_FLAG1
+OTHER_FLAG2
+...
+OTHER_FLAGm
+
+Special case is the MISC key. It will be as follows:
+[MISC]
+FrameRate=60
+
+In this case it will set the variable frameRate to 60. The "FrameRate" to frameRate is hard coded.
+The coded representation of this is a map with a string key (key heading in the file) and with the a vector of flags (every newline is a new index) as its element.

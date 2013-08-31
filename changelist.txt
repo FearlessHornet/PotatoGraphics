@@ -1,0 +1,88 @@
+Project:		Potato Graphics
+Programmer:		Kaleb McCall
+Company:		Potato Softworks
+Version:		0.2.0
+Date:			24 April 2013
+
+Changelist:
+0.2.0:
+Compiled debug build.
+Changed Potato::Graphics::Initialise to include checking for loaded libraries success.
+
+0.1.3:
+Finished Potato::Graphics::Initialise.
+Created source for Potato::Graphics members:
+	- Cleanup
+	- Graphics
+
+0.1.2:
+Added SLD_Surface* display to Potato::Graphics as a private member, this is the output screen.
+Added SDL_image flags to optionFlags.
+Changed LoadConfig to include an IMGLOADER case for SDL_image.
+Flags will now have a constructor value of 0xFFFFFFFF.
+Changed LoadConfig so that all basic flag loading cases now check whether to assign or to OR the loading value, uses the new constructor value to differentiate.
+Changes Potato::Graphics::Initialise significantly:
+	- now assigns the output SDL_Surface* from SDL_SetVideoMode
+	- now calls SDL_image's initialiser IMG_Init, calls with flags.
+Created source code for the following Potato::Graphics methods:
+	- Render
+	- Renderloop
+	- LoadAssets
+Changed Potato::Graphics::ConfigSegments to utilise new Potato::Strings::ReadFile functionality.
+Changed Potato::RenderObject significantly:
+	- removed vector of SDL_Surface*'s, now only one surface is used
+	- added vector<Pair> of locations and sizes of animation states on the one SDL_Surface*
+	- added string name
+
+0.1.1:
+Changed default parameter for Potato::RenderObject::Animate to be in the header declaration rather than in the definition.
+Completed Potato::Graphics::LoadConfig.
+Changed all render vectors to be vectors of RenderObject* not SDL_Surface*.
+Changed all pending render vectors to be private.
+Compressed render vectors into one vector, changed entity sheet accordingly.
+Compressed pending render vectors into one vector, changed entity sheet accordingly.
+Added ConfigSegments function - it takes no parameters but returns a map of the configuration (See config template file for how this is set out).
+Created config file template.
+Created source code for the following Potato::Graphics methods:
+	- Configure
+	- Update
+	- Delay
+	- ConfigSegments (see above for details)
+
+0.1.0:
+Created c++ project.
+Created class Potato::Graphics.
+Created struct Potato::RenderObject.
+Created source code for Potato::RenderObject::Animate.
+In progress source code:
+	- Potato::Graphics::Initialise
+		Almost complete
+	- Potato::Graphics::LoadConfig
+		Currently hard coding string mappings for SDL flags
+	
+0.0.4:
+Created Delay flowchart.
+Created Graphics Engine entity sheet, note: OBG and OFG stand for OptionsBackGround and OptionsForeGround respectively.
+Created Render Object entity sheet.
+Changed Animate flowchart to directly contain flow for getting time change and updating attributes within parent RenderObject.
+Changed Initialise flowchart to reference GetConfiguration as a function rather than document operation.
+
+0.0.3:
+Created data types mind map.
+Created manifest template.
+Created flowcharts for the following methods:
+	- LoadAssets
+	- Render
+	- Animate
+Changed the Initialise flowchart to call LoadAssets rather than having it as a process.
+
+0.0.2:
+Created flowcharts for the following methods:
+	- Initialise
+	- Renderloop
+	- Update
+	- Configure
+	- Cleanup
+	
+0.0.1:
+Created project.
