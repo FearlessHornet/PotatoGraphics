@@ -12,6 +12,11 @@ void LogMessage(std::string message)
 	logFile << message << std::endl;
 }
 
+void LogMessage(int val)
+{
+	logFile << val << std::endl;
+}
+
 namespace Potato{
 
 	Graphics::Graphics(void)
@@ -41,16 +46,16 @@ namespace Potato{
 		bool wait = true;
 		float timeElapsed;
 		int ticks;
-		
+
+		period = (int)((1.0/frameRate)*1000);
 		ticks = SDL_GetTicks() / period;
 		// Number of ticks past
-
 		thisTick = 0;
 
 		while (thisTick < period)
 		{
-			thisTick = SDL_GetTicks() % ticks;
-			// Get time (ms) since the tick "ticks"
+			thisTick = SDL_GetTicks() - (ticks * period); 
+			// Get time (ms) since the last tick
 		}
 	}
 
@@ -187,7 +192,7 @@ namespace Potato{
 
 			else if (j.first == "MISC")
 			{
-				LogMessage("MISC SEGMENTS");
+				LogMessage("MISC SEGMENTS...");
 				for (auto i : j.second)
 				{
 					buffer = *Strings::Split(i, "=");
@@ -212,7 +217,7 @@ namespace Potato{
 	bool Graphics::Initialise(void)
 		/* Initialises the graphics engine with the configuration in graphics.config */	
 	{
-		LogMessage("INITIALIZING...");
+		LogMessage("INITIALISING...");
 
 		while (running){
 			// Possible freeze spot if renderloop stops responding
@@ -226,17 +231,26 @@ namespace Potato{
 		}
 
 		LogMessage("LOADING CONFIG...");
-
+		IMG_FLAGS = 0xFFFFFFFF;
+		INIT_FLAGS = 0xFFFFFFFF;
+		VIDEO_FLAGS = 0xFFFFFFFF;
 		LoadConfig();
 		if (SDL_Init(INIT_FLAGS) == -1)
 		{
+			LogMessage("SDL FAILED TO INITIALIZE!");
+			LogMessage(INIT_FLAGS);
 			return false;
 		}
 
 		LogMessage("CONFIGURING SDL...");
-		display = SDL_SetVideoMode(res.x, res.y, 0, VIDEO_FLAGS);
 		IMG_Init(IMG_FLAGS);
 		LoadAssets();
+		display = SDL_SetVideoMode(res.x, res.y, 0, VIDEO_FLAGS);
+		if (display == NULL) {
+			LogMessage("FAILED TO SET VIDEO MODE!");
+			LogMessage(VIDEO_FLAGS);
+			return false;
+		}
 		LogMessage("STARTING RENDER THREAD...");
 		renderThread = new std::thread(&Potato::Graphics::Renderloop, this);
 		renderThread->detach();
@@ -294,7 +308,6 @@ namespace Potato{
 		SDL_Rect output;
 		SDL_Rect input;
 
-		LogMessage("RENDER THREAD: DRAWING...");
 		object->Animate(); // Check if the objects sprite is up-to-date
 
 		if (object->sprite == NULL)
@@ -320,6 +333,7 @@ namespace Potato{
 		/* This is a constant loop run by a child thread, renders everything in
 		the render lists */
 	{
+		Uint32 startTick, endTick;
 		while (!kill)
 		{
 			if (update && !locked)
@@ -332,6 +346,8 @@ namespace Potato{
 				update = false;
 			}
 
+			startTick = (int)(SDL_GetTicks()/period);
+
 			for (auto renderlist : current)
 			{
 				for (auto object : renderlist)
@@ -340,6 +356,10 @@ namespace Potato{
 				}
 			}
 			SDL_Flip(display);
+			endTick = (int)(SDL_GetTicks()/period);
+			if ((startTick - endTick) == 0) {
+				Delay();
+			}
 		}
 	}
 
@@ -370,7 +390,7 @@ namespace Potato{
 			info.erase(info.begin());
 
 			// If there's only one animation state set isSprite to false else isSprite is true
-			object->isSprite = !(asset.size() == 1);
+			object->isSprite = (asset.size() == 1);
 
 			// Default data
 			object->state=1;
@@ -379,9 +399,9 @@ namespace Potato{
 			object->lastUpdate=0;
 
 			// Loading the SDL_Surface
-			temp = IMG_Load(asset.c_str());
-			object->sprite = SDL_DisplayFormatAlpha(temp);
-			SDL_FreeSurface(temp);
+			object->sprite = IMG_Load(asset.c_str());
+			//object->sprite = SDL_DisplayFormatAlpha(temp);
+			//SDL_FreeSurface(temp);
 
 			for (auto anim : info)
 				/* Each animation state */
@@ -401,6 +421,7 @@ namespace Potato{
 
 			}
 
+			object->animTime = object->times[0];
 			// Add to assets pool and reset the dummy object pointer
 			assets.push_back(*object);
 			object = NULL;
@@ -412,7 +433,8 @@ namespace Potato{
 	{
 		LogMessage("KILLING CHILD...");
 		kill = true;
-		Sleep(50);
+		Delay();
+		Delay();
 		kill = false;
 
 		LogMessage("CLEANING...");
@@ -461,11 +483,12 @@ vector<vector<Potato::RenderObject*>> makeTestObject(Potato::RenderObject* obj) 
 int _tmain(int argc, _TCHAR* argv[])
 {
 	Potato::Graphics engine;
-	engine.Initialise();
-	Potato::RenderObject *bg;
-	bg = &engine.assets[0];
-	engine.Update(makeTestObject(bg));
-	Sleep(10000);
+	if (engine.Initialise()) {
+		Potato::RenderObject *bg;
+		bg = &engine.assets[0];
+		engine.Update(makeTestObject(bg));
+		Sleep(10000);
+	}
 	engine.Cleanup();
 	logFile.close();
 	return 0;

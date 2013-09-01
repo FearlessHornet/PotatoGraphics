@@ -1,14 +1,21 @@
 Project:		Potato Graphics
 Programmer:		Kaleb McCall
 Company:		Potato Softworks
-Version:		0.2.1
+Version:		0.2.2
 Date:			1 September 2013
 
 Changelist:
+0.2.2:
+Bugfix (#4): flags were never being initialised.
+Updated Delay to correctly update time elapsed during last tick.
+Updated RenderLoop to render at most once per tick.
+Bugfix (#3): seems to have been fixed by the Delay function update and adding another delay function call
+Bugfix (#2): fixed LoadAssets; IMG_Load makes SDL_DisplayFormatAlpha calls redundand, method now correctly initialises default values
+
 0.2.1:
 Started debugging.
 Found 4 bugs.
-Bugfix (bug #1): moved thread termination to top of cleanup and added a sleep call to allow time for thread to exit
+Bugfix (#1): moved thread termination to top of cleanup and added a sleep call to allow time for thread to exit
 	
 0.2.0:
 Compiled debug build.

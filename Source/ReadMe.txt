@@ -4,6 +4,9 @@
 
 This is a SDL graphics engine to be used in an overarching game engine.
 
+SDL libraries are required (SDL, SDL_IMG, SDL_ttf).
+PotatoLibrary static lib required.
+
 Currently the project is being written in visual studio 2012; so it has
 stdafx files.
 
