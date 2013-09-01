@@ -11,6 +11,8 @@ Updated Delay to correctly update time elapsed during last tick.
 Updated RenderLoop to render at most once per tick.
 Bugfix (#3): seems to have been fixed by the Delay function update and adding another delay function call
 Bugfix (#2): fixed LoadAssets; IMG_Load makes SDL_DisplayFormatAlpha calls redundand, method now correctly initialises default values
+Found a bug with animation.
+Added enhancement to traker.
 
 0.2.1:
 Started debugging.
