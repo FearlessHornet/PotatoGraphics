@@ -4,7 +4,7 @@
 #include "PotatoGraphics.h"
 #include <fstream>
 
-std::ofstream logFile("log.txt");
+std::ofstream logFile("graphics.log");
 
 
 void LogMessage(std::string message)
