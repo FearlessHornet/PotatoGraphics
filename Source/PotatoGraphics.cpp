@@ -4,8 +4,8 @@
 #include "PotatoGraphics.h"
 #include <fstream>
 
-std::ofstream logFile("graphics.log");
 
+std::ofstream logFile("graphics.log");
 
 void LogMessage(std::string message)
 {
@@ -15,6 +15,14 @@ void LogMessage(std::string message)
 void LogMessage(int val)
 {
 	logFile << val << std::endl;
+}
+
+vector<vector<Potato::RenderObject*>> makeTestObject(Potato::RenderObject* obj) {
+	vector<Potato::RenderObject*> list;
+	list.push_back(obj);
+	vector<vector<Potato::RenderObject*>> list2;
+	list2.push_back(list);
+	return list2;
 }
 
 namespace Potato{
@@ -96,9 +104,10 @@ namespace Potato{
 			timeElapsed = thisTick - lastUpdate;
 			if (timeElapsed >= animTime)
 			{
+				LogMessage("ANIMATING...");
 				net = state + increment;
-				state = (net % times.size()) + 1; // Possible skipping edge case
-				animTime = times[state-1];
+				state = (net % times.size()); // Possible skipping edge case
+				animTime = times[state];
 				lastUpdate = thisTick;
 			}
 		}
@@ -290,7 +299,30 @@ namespace Potato{
 	}
 
 	void Graphics::Update(vector<vector<RenderObject*>> renderLists)
-		/* Updates the render vectors */
+		/* Update the render vectors */
+	{
+		int i=0;
+		while (update && locked)
+		{
+			Delay();
+		}
+		locked = true;
+		pending = current;
+		for (auto list : renderLists){
+			if (i < pending.size()){
+				pending[i].insert(pending[i].end(), list.begin(), list.end());
+				i++;
+			}
+			else {
+				pending.push_back(list);
+			}
+		}
+		update = true;
+		locked = false;
+	}
+
+	void Graphics::Set(vector<vector<RenderObject*>> renderLists)
+		/* Set the render vectors */
 	{
 		while (update && locked)
 		{
@@ -318,11 +350,10 @@ namespace Potato{
 		output.x = object->coordinate.x;
 		output.y = object->coordinate.y;
 
-		input.x = object->locations[object->state-1].x;
-		input.y = object->locations[object->state-1].y;
-		input.w = object->sizes[object->state-1].x;
-		input.h = object->sizes[object->state-1].y;
-
+		input.x = object->locations[object->state].x;
+		input.y = object->locations[object->state].y;
+		input.w = object->sizes[object->state].x;
+		input.h = object->sizes[object->state].y;
 
 		SDL_BlitSurface(object->sprite, &input, display, &output);
 
@@ -390,7 +421,7 @@ namespace Potato{
 			info.erase(info.begin());
 
 			// If there's only one animation state set isSprite to false else isSprite is true
-			object->isSprite = (asset.size() == 1);
+			object->isSprite = !(info.size() == 1);
 
 			// Default data
 			object->state=1;
@@ -400,8 +431,6 @@ namespace Potato{
 
 			// Loading the SDL_Surface
 			object->sprite = IMG_Load(asset.c_str());
-			//object->sprite = SDL_DisplayFormatAlpha(temp);
-			//SDL_FreeSurface(temp);
 
 			for (auto anim : info)
 				/* Each animation state */
@@ -472,22 +501,20 @@ namespace Potato{
 	}
 }
 
-vector<vector<Potato::RenderObject*>> makeTestObject(Potato::RenderObject* obj) {
-	vector<Potato::RenderObject*> list;
-	list.push_back(obj);
-	vector<vector<Potato::RenderObject*>> list2;
-	list2.push_back(list);
-	return list2;
-}
-
 int _tmain(int argc, _TCHAR* argv[])
 {
 	Potato::Graphics engine;
 	if (engine.Initialise()) {
-		Potato::RenderObject *bg;
-		bg = &engine.assets[0];
-		engine.Update(makeTestObject(bg));
-		Sleep(10000);
+		Potato::RenderObject bg, test;
+		//bg = engine.assets[0];
+		test = engine.assets[1];
+		//engine.Update(makeTestObject(&bg));
+		engine.Update(makeTestObject(&test));
+		Sleep(4000);
+		test.coordinate.x = 150;
+		test.coordinate.y = 150;
+		//engine.Update(makeTestObject())
+		Sleep(6000);
 	}
 	engine.Cleanup();
 	logFile.close();

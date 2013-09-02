@@ -46,6 +46,7 @@ namespace Potato{
 
 		bool Initialise(void); // Done
 		void Update(vector<vector<RenderObject*>> renderLists); // Done
+		void Set(vector<vector<RenderObject*>> renderLists); // Done
 		void Configure(map<string, vector<string>> options); // Done
 		void Cleanup(void); // Done
 
