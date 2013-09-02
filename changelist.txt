@@ -1,10 +1,14 @@
 Project:		Potato Graphics
 Programmer:		Kaleb McCall
 Company:		Potato Softworks
-Version:		0.2.2
+Version:		0.2.3
 Date:			1 September 2013
 
 Changelist:
+0.2.3:
+Bugfix (#5): corrected indexing in Animate.
+Updated liscencing to fully credit respective authors.
+
 0.2.2:
 Bugfix (#4): flags were never being initialised.
 Updated Delay to correctly update time elapsed during last tick.
