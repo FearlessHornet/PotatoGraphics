@@ -17,12 +17,14 @@ void LogMessage(int val)
 	logFile << val << std::endl;
 }
 
-vector<vector<Potato::RenderObject*>> makeTestObject(Potato::RenderObject* obj) {
-	vector<Potato::RenderObject*> list;
-	list.push_back(obj);
-	vector<vector<Potato::RenderObject*>> list2;
-	list2.push_back(list);
-	return list2;
+void LogVectors(vector<vector<Potato::RenderObject*>> lists)
+{
+	for (auto list : lists){
+		logFile << "LIST:" << std::endl;
+		for (auto obj : list){
+			logFile << obj->name.c_str() << std::endl;
+		}
+	}
 }
 
 namespace Potato{
@@ -39,6 +41,11 @@ namespace Potato{
 		res.x=1920;
 		res.y=1080;
 		running = false;
+		vector<RenderObject*> empty;
+		for (int i=0; i<=4; i++){
+			current.push_back(empty);
+			pending.push_back(empty);
+		}
 	}
 
 	Graphics::~Graphics(void)
@@ -298,27 +305,26 @@ namespace Potato{
 		LoadConfig();
 	}
 
-	void Graphics::Update(vector<vector<RenderObject*>> renderLists)
+	void Graphics::Update(vector<RenderObject*> list, int level)
 		/* Update the render vectors */
 	{
-		int i=0;
-		while (update && locked)
+		while (update || locked)
 		{
 			Delay();
 		}
 		locked = true;
-		pending = current;
-		for (auto list : renderLists){
-			if (i < pending.size()){
-				pending[i].insert(pending[i].end(), list.begin(), list.end());
-				i++;
-			}
-			else {
-				pending.push_back(list);
-			}
-		}
+		LogMessage("UPDATING...");
+		pending[ENG_APPEND].push_back(NULL);
+		pending[level] = list;
 		update = true;
 		locked = false;
+	}
+
+	void Graphics::Update(RenderObject* obj, int level)
+	{
+		vector<RenderObject*> single;
+		single.push_back(obj);
+		Update(single, level);
 	}
 
 	void Graphics::Set(vector<vector<RenderObject*>> renderLists)
@@ -339,6 +345,10 @@ namespace Potato{
 	{
 		SDL_Rect output;
 		SDL_Rect input;
+
+		if (object == NULL){ //End of list
+			return false;
+		}
 
 		object->Animate(); // Check if the objects sprite is up-to-date
 
@@ -371,8 +381,14 @@ namespace Potato{
 			{
 				LogMessage("RENDER THREAD: UPDATING...");
 				locked = true;
-				current.clear();
-				current = pending;
+				if (pending[ENG_APPEND].size() == 0)
+				{
+					current.clear();
+				}
+				pending[ENG_APPEND].clear();
+				for (int i=0; i<4; i++){
+					current[i].insert(current[i].end(), pending[i].begin(), pending[i].end());
+				}
 				locked = false;
 				update = false;
 			}
@@ -424,7 +440,7 @@ namespace Potato{
 			object->isSprite = !(info.size() == 1);
 
 			// Default data
-			object->state=1;
+			object->state=0;
 			object->coordinate.x=0;
 			object->coordinate.y=0;
 			object->lastUpdate=0;
@@ -506,14 +522,17 @@ int _tmain(int argc, _TCHAR* argv[])
 	Potato::Graphics engine;
 	if (engine.Initialise()) {
 		Potato::RenderObject bg, test;
-		//bg = engine.assets[0];
+		vector<Potato::RenderObject*> list;
+		bg = engine.assets[0];
 		test = engine.assets[1];
-		//engine.Update(makeTestObject(&bg));
-		engine.Update(makeTestObject(&test));
+		list.push_back(&bg);
+		list.push_back(&test);
+		//engine.Update(&bg);
+		engine.Update(list);
+		engine.Update(&test);
 		Sleep(4000);
 		test.coordinate.x = 150;
 		test.coordinate.y = 150;
-		//engine.Update(makeTestObject())
 		Sleep(6000);
 	}
 	engine.Cleanup();

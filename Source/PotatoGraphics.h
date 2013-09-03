@@ -1,6 +1,11 @@
 #include "stdafx.h"
 
 #define GRAPH_CONFIG "graphics.config"
+#define ENG_BACKGROUND 0
+#define ENG_FOREGROUND 1
+#define ENG_MENU 2
+#define ENG_MENU_BUTTONS 3
+#define ENG_APPEND 4
 
 namespace Potato{
 	struct RenderObject{
@@ -44,18 +49,19 @@ namespace Potato{
 		Graphics(void);
 		~Graphics(void);
 
+		void Cleanup(void); // Done
 		bool Initialise(void); // Done
-		void Update(vector<vector<RenderObject*>> renderLists); // Done
 		void Set(vector<vector<RenderObject*>> renderLists); // Done
 		void Configure(map<string, vector<string>> options); // Done
-		void Cleanup(void); // Done
+		void Update(RenderObject* obj, int level=ENG_FOREGROUND); // Done
+		void Update(vector<RenderObject*> list, int level=ENG_FOREGROUND); // Done
 
 	private:
 		void Delay(void); // Done
 		void LoadConfig(void); // Done
 		void LoadAssets(void); // Done
-		bool Render(RenderObject *object); // Done
 		void Renderloop(void); // Done
+		bool Render(RenderObject *object); // Done
 		map<string, vector<string>> ConfigSegments(void); // Done
 	};
 }
