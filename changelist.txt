@@ -1,17 +1,18 @@
 Project:		Potato Graphics
 Programmer:		Kaleb McCall
 Company:		Potato Softworks
-Version:		0.2.4
-Date:			3 September 2013
+Version:		0.3.0
+Date:			8 September 2013
 
 Changelist:
-0.2.4:
-Fixed and overloaded Update function.
+0.3.0:
+Refactored and added mutex implementation.
 
 0.2.3:
 Bugfix (#5): corrected indexing in Animate.
 Updated liscencing to fully credit respective authors.
 Added enhancement (#6): changed old Update to new method Set and recreated Update add to the vector lists dynamically
+Fixed and overloaded Update function.
 
 0.2.2:
 Bugfix (#4): flags were never being initialised.

@@ -30,13 +30,12 @@ void LogVectors(vector<vector<Potato::RenderObject*>> lists)
 namespace Potato{
 
 	Graphics::Graphics(void)
-		/* Constructor */
+		/* Constructor (default values) */
 	{
 		display = NULL;
 		frameRate = 60;
 		update = false;
 		kill = false;
-		locked = false;
 		period = (int)((1.0/frameRate)*1000);
 		res.x=1920;
 		res.y=1080;
@@ -235,15 +234,11 @@ namespace Potato{
 	{
 		LogMessage("INITIALISING...");
 
-		while (running){
-			// Possible freeze spot if renderloop stops responding
-			if (!locked && !kill)
-			{
-				locked = true;
-				kill = true;
-				locked = false;
-			}
-			Delay();
+		if (running) {
+			LogMessage("KILLING RENDER THREAD...");
+			locked.lock();
+			kill = true;
+			locked.unlock();
 		}
 
 		LogMessage("LOADING CONFIG...");
@@ -288,14 +283,14 @@ namespace Potato{
 		}
 
 		configFile.open("graphics.config");
-		for (auto j : options)
+		for (auto newOptions : options)
 		{
 			segment = "[";
-			segment += j.first;
+			segment += newOptions.first;
 			segment += "]\n";
-			for (auto k : j.second)
+			for (auto flag : newOptions.second)
 			{
-				segment += k;
+				segment += flag;
 				segment += "\n";
 			}
 			configFile.write(segment.c_str(), segment.size());
@@ -308,16 +303,15 @@ namespace Potato{
 	void Graphics::Update(vector<RenderObject*> list, int level)
 		/* Update the render vectors */
 	{
-		while (update || locked)
+		while (update || !locked.try_lock())
 		{
 			Delay();
 		}
-		locked = true;
 		LogMessage("UPDATING...");
-		pending[ENG_APPEND].push_back(NULL);
+		app = true;
 		pending[level] = list;
 		update = true;
-		locked = false;
+		locked.unlock();
 	}
 
 	void Graphics::Update(RenderObject* obj, int level)
@@ -330,14 +324,14 @@ namespace Potato{
 	void Graphics::Set(vector<vector<RenderObject*>> renderLists)
 		/* Set the render vectors */
 	{
-		while (update && locked)
+		while (update || !locked.try_lock())
 		{
 			Delay();
 		}
-		locked = true;
+		LogMessage("SETTING...");
 		pending = renderLists;
 		update = true;
-		locked = false;
+		locked.unlock();
 	}
 
 	bool Graphics::Render(RenderObject *object)
@@ -375,22 +369,22 @@ namespace Potato{
 		the render lists */
 	{
 		Uint32 startTick, endTick;
+		running = true;
 		while (!kill)
 		{
-			if (update && !locked)
+			if (update && locked.try_lock())
 			{
 				LogMessage("RENDER THREAD: UPDATING...");
-				locked = true;
-				if (pending[ENG_APPEND].size() == 0)
+				if (!app)
 				{
 					current.clear();
 				}
-				pending[ENG_APPEND].clear();
+				app = false;
 				for (int i=0; i<4; i++){
 					current[i].insert(current[i].end(), pending[i].begin(), pending[i].end());
 				}
-				locked = false;
 				update = false;
+				locked.unlock();
 			}
 
 			startTick = (int)(SDL_GetTicks()/period);
@@ -404,10 +398,11 @@ namespace Potato{
 			}
 			SDL_Flip(display);
 			endTick = (int)(SDL_GetTicks()/period);
-			if ((startTick - endTick) == 0) {
+			if ((startTick - endTick) != 0) {
 				Delay();
 			}
 		}
+		running = false;
 	}
 
 	void Graphics::LoadAssets(void)
@@ -467,10 +462,21 @@ namespace Potato{
 			}
 
 			object->animTime = object->times[0];
-			// Add to assets pool and reset the dummy object pointer
-			assets.push_back(*object);
+			// Add to rawAssets pool and reset the dummy object pointer
+			rawAssets.push_back(*object);
+			assets[object->name] = &rawAssets.back();
 			object = NULL;
 		}
+	}
+
+	RenderObject* Graphics::CreateObject(string asset) {
+		RenderObject *newObj;
+		if (assets.find(asset) != assets.end()) {
+			newObj = new RenderObject;
+			*newObj = *assets[asset];
+			return newObj;
+		}
+		return NULL;
 	}
 
 	void Graphics::Cleanup(void)
@@ -478,12 +484,13 @@ namespace Potato{
 	{
 		LogMessage("KILLING CHILD...");
 		kill = true;
-		Delay();
-		Delay();
+		while (running) { // If render thread is unresponsive this will never terminate
+			Delay();
+		}
 		kill = false;
 
 		LogMessage("CLEANING...");
-		for (auto object : assets)
+		for (auto object : rawAssets)
 		{
 			SDL_FreeSurface(object.sprite);
 		}
@@ -495,7 +502,7 @@ namespace Potato{
 
 		LogMessage("PURGING VECTORS...");
 
-		assets.clear();
+		rawAssets.clear();
 		current.clear();
 		pending.clear();
 
@@ -504,7 +511,6 @@ namespace Potato{
 		display = NULL;
 		frameRate = 60;
 		update = false;
-		locked = false;
 		period = (int)((1.0/frameRate)*1000);
 		res.x=1920;
 		res.y=1080;
@@ -520,22 +526,6 @@ namespace Potato{
 int _tmain(int argc, _TCHAR* argv[])
 {
 	Potato::Graphics engine;
-	if (engine.Initialise()) {
-		Potato::RenderObject bg, test;
-		vector<Potato::RenderObject*> list;
-		bg = engine.assets[0];
-		test = engine.assets[1];
-		list.push_back(&bg);
-		list.push_back(&test);
-		//engine.Update(&bg);
-		engine.Update(list);
-		engine.Update(&test);
-		Sleep(4000);
-		test.coordinate.x = 150;
-		test.coordinate.y = 150;
-		Sleep(6000);
-	}
-	engine.Cleanup();
 	logFile.close();
 	return 0;
 }

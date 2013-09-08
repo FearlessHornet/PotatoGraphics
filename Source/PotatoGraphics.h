@@ -5,7 +5,6 @@
 #define ENG_FOREGROUND 1
 #define ENG_MENU 2
 #define ENG_MENU_BUTTONS 3
-#define ENG_APPEND 4
 
 namespace Potato{
 	struct RenderObject{
@@ -27,21 +26,23 @@ namespace Potato{
 	class Graphics{
 	public:
 		SDL_Surface* display;
-		vector<RenderObject> assets;
+		std::map<string, const RenderObject*> assets;
 
 	private:
 		bool update;
 		bool kill;
+		bool app;
 		int period;
-		bool locked;
 		bool running;
 		int frameRate;
 
 		Pair res;
 		Uint32 IMG_FLAGS;
 		Uint32 INIT_FLAGS;
+		std::mutex locked;
 		Uint32 VIDEO_FLAGS;
 		std::thread* renderThread;
+		vector<RenderObject> rawAssets;
 		vector<vector<RenderObject*>> current;
 		vector<vector<RenderObject*>> pending;
 
@@ -51,6 +52,7 @@ namespace Potato{
 
 		void Cleanup(void); // Done
 		bool Initialise(void); // Done
+		RenderObject* CreateObject(string asset);
 		void Set(vector<vector<RenderObject*>> renderLists); // Done
 		void Configure(map<string, vector<string>> options); // Done
 		void Update(RenderObject* obj, int level=ENG_FOREGROUND); // Done
