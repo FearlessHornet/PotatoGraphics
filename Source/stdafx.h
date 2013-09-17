@@ -27,6 +27,7 @@
 #include <mutex>
 #include <windows.h>
 #include <WinBase.h>
+#include <math.h>
 
 using std::map;
 using std::vector;

@@ -1,10 +1,36 @@
 Project:		Potato Graphics
 Programmer:		Kaleb McCall
 Company:		Potato Softworks
-Version:		0.3.0
-Date:			8 September 2013
+Version:		0.4.0
+Date:			17 September 2013
 
 Changelist:
+0.4.0:
+Major rewrite:
+	- Functions have been restyled to camelcase.
+	- Set function has been removed.
+	- Map functionality has been added.
+	- Renderloop now renders by map.
+	- Render lists have been removed.
+	- Render member has been renamed to renderObj.
+	- renderRow has been added:
+	  This member recursively renders a row until a size has been hit or the edge of the map is hit.
+	- renderMap has been added:
+	  This member recursively calls renderRow until it falls off the map or a size has been hit.
+	- getNode has been added:
+	  This member recursively searches through the map until a node at a set coordinate is found.
+	- getCameraGrid has been added:
+	  This member returns the grid coordinate of the camera.
+	- getCameraGridSize has been added:
+	  This member returns the maximum number of grid cells that the camera can span.
+	- MapNode struct has been added:
+	  This structure contains BasicObject's currently in a grid cell, of known coordinate, as well as pointers to all surrounding MapNode's in a mask. There are also declarations for pathfinding support.
+	- BasicObject struct has been added:
+	  This structure contains simple interaction and location information.
+	- update method has been unoverloaded and rewritten to safely add a BasicObject pointer to it's corresponding MapNode.
+	- addObject method has been created for MapNode structure:
+	  This method adds a given BasicObject to the node.
+	
 0.3.0:
 Refactored and added mutex implementation.
 

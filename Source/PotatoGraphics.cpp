@@ -2,27 +2,13 @@
 //
 #include "stdafx.h"
 #include "PotatoGraphics.h"
-#include <fstream>
 
-
-std::ofstream logFile("graphics.log");
-
-void LogMessage(std::string message)
-{
-	logFile << message << std::endl;
-}
-
-void LogMessage(int val)
-{
-	logFile << val << std::endl;
-}
-
-void LogVectors(vector<vector<Potato::RenderObject*>> lists)
+void LogVectors(vector<vector<Potato::RenderObject*>> lists, Potato::Debug logger)
 {
 	for (auto list : lists){
-		logFile << "LIST:" << std::endl;
+		logger.LogMessage("LIST:");
 		for (auto obj : list){
-			logFile << obj->name.c_str() << std::endl;
+			logger.LogMessage(obj->name);
 		}
 	}
 }
@@ -34,7 +20,7 @@ namespace Potato{
 	{
 		display = NULL;
 		frameRate = 60;
-		update = false;
+		updatePending = false;
 		kill = false;
 		period = (int)((1.0/frameRate)*1000);
 		res.x=1920;
@@ -50,15 +36,14 @@ namespace Potato{
 	Graphics::~Graphics(void)
 		/* Destructor */
 	{
-		Cleanup();
+		cleanup();
 	}
 
-	void Graphics::Delay(void)
+	void Graphics::delay(void)
 		/* Waits until the the next tick */ 
 	{
-		Uint32 startTick, thisTick;
+		Uint32 thisTick;
 		bool wait = true;
-		float timeElapsed;
 		int ticks;
 
 		period = (int)((1.0/frameRate)*1000);
@@ -73,7 +58,7 @@ namespace Potato{
 		}
 	}
 
-	map<string, vector<string>> Graphics::ConfigSegments(void)
+	map<string, vector<string>> Graphics::configSegments(void)
 		/* Parses the config file */
 	{
 		string data;
@@ -82,52 +67,30 @@ namespace Potato{
 		vector<string>* FLAGS;
 		vector<string>* temp;
 		
-		LogMessage("LOADING CONFIG FILE...");
+		logger.LogMessage("LOADING CONFIG FILE...");
 		data = Strings::ReadFile(GRAPH_CONFIG);
-		LogMessage("SPLITTING DATA...");
+		logger.LogMessage("SPLITTING DATA...");
 		blocks = Strings::Split(data,"[");
-		LogMessage("CHECKING SEGMENTS");
+		logger.LogMessage("CHECKING SEGMENTS");
 		for (auto i : *blocks)
 		{
 			temp = Strings::Split(i,"]",true);
 			FLAGS = Strings::Split((*temp)[1]);
-			LogMessage("APPLYING SEGMENT...");
+			logger.LogMessage("APPLYING SEGMENT...");
 			segments[(*temp)[0]] = *FLAGS;
 		}
 
 		return segments;
 	}
 
-	void RenderObject::Animate(int increment)
-		/* Checks is the last animation has played and increments accoringly */
-	{
-
-		Uint32 thisTick;
-		int timeElapsed, net;
-		if (isSprite)
-		{
-			thisTick = SDL_GetTicks();
-			timeElapsed = thisTick - lastUpdate;
-			if (timeElapsed >= animTime)
-			{
-				LogMessage("ANIMATING...");
-				net = state + increment;
-				state = (net % times.size()); // Possible skipping edge case
-				animTime = times[state];
-				lastUpdate = thisTick;
-			}
-		}
-
-	}
-
-	void Graphics::LoadConfig(void)
+	void Graphics::loadConfig(void)
 		/* Loads configuration from graphics.config file */
 	{
 		map<string, vector<string>> config;
 		map<string, Uint32> optionFlags;
 		vector<string> buffer;
 
-		LogMessage("CREATING FLAG TABLE...");
+		logger.LogMessage("CREATING FLAG TABLE...");
 		optionFlags["EVERYTHING"] = SDL_INIT_EVERYTHING;
 		optionFlags["AUDIO"] = SDL_INIT_AUDIO;
 		optionFlags["VIDEO"] = SDL_INIT_VIDEO;
@@ -147,9 +110,9 @@ namespace Potato{
 		optionFlags["PNG"] = IMG_INIT_PNG;
 		optionFlags["TIF"] = IMG_INIT_TIF;
 
-		LogMessage("LOADING CONFIG SEGMENTS...");
+		logger.LogMessage("LOADING CONFIG SEGMENTS...");
 		config = ConfigSegments();
-		LogMessage("APPLYING FLAGS...");
+		logger.LogMessage("APPLYING FLAGS...");
 
 		for (auto j : config)
 		{
@@ -157,7 +120,7 @@ namespace Potato{
 			if (j.first == "INITIALISE")
 				// SDL flags for SDL_Init
 			{
-				LogMessage("BASIC SEGMENTS...");
+				logger.LogMessage("BASIC SEGMENTS...");
 				for (auto i : j.second)
 				{
 					if (INIT_FLAGS == 0xFFFFFFFF)
@@ -174,7 +137,7 @@ namespace Potato{
 			else if (j.first == "VIDEO")
 				// SDL flags for SDL_SetVideoMode
 			{
-				LogMessage("VIDEO SEGMENTS...");
+				logger.LogMessage("VIDEO SEGMENTS...");
 				for (auto i : j.second)
 				{
 					if (VIDEO_FLAGS == 0xFFFFFFFF)
@@ -191,7 +154,7 @@ namespace Potato{
 			else if (j.first == "IMGLOADER")
 				// SDL_image flags
 			{
-				LogMessage("IMAGE SEGMENTS...");
+				logger.LogMessage("IMAGE SEGMENTS...");
 				for (auto i : j.second)
 				{
 					if (IMG_FLAGS == 0xFFFFFFFF)
@@ -207,7 +170,7 @@ namespace Potato{
 
 			else if (j.first == "MISC")
 			{
-				LogMessage("MISC SEGMENTS...");
+				logger.LogMessage("MISC SEGMENTS...");
 				for (auto i : j.second)
 				{
 					buffer = *Strings::Split(i, "=");
@@ -229,54 +192,55 @@ namespace Potato{
 		}
 	}
 
-	bool Graphics::Initialise(void)
+	bool Graphics::initialise(void)
 		/* Initialises the graphics engine with the configuration in graphics.config */	
 	{
-		LogMessage("INITIALISING...");
+		logger = Debug(GRAPH_CONFIG);
+		logger.LogMessage("INITIALISING...");
 
 		if (running) {
-			LogMessage("KILLING RENDER THREAD...");
-			locked.lock();
+			logger.LogMessage("KILLING RENDER THREAD...");
+			padlock.lock();
 			kill = true;
-			locked.unlock();
+			padlocked.unlock();
 		}
 
-		LogMessage("LOADING CONFIG...");
+		logger.LogMessage("LOADING CONFIG...");
 		IMG_FLAGS = 0xFFFFFFFF;
 		INIT_FLAGS = 0xFFFFFFFF;
 		VIDEO_FLAGS = 0xFFFFFFFF;
-		LoadConfig();
+		loadConfig();
 		if (SDL_Init(INIT_FLAGS) == -1)
 		{
-			LogMessage("SDL FAILED TO INITIALIZE!");
-			LogMessage(INIT_FLAGS);
+			logger.LogMessage("SDL FAILED TO INITIALIZE!");
+			logger.LogMessage(INIT_FLAGS);
 			return false;
 		}
 
-		LogMessage("CONFIGURING SDL...");
+		logger.LogMessage("CONFIGURING SDL...");
 		IMG_Init(IMG_FLAGS);
-		LoadAssets();
+		loadAssets();
 		display = SDL_SetVideoMode(res.x, res.y, 0, VIDEO_FLAGS);
 		if (display == NULL) {
-			LogMessage("FAILED TO SET VIDEO MODE!");
-			LogMessage(VIDEO_FLAGS);
+			logger.LogMessage("FAILED TO SET VIDEO MODE!");
+			logger.LogMessage(VIDEO_FLAGS);
 			return false;
 		}
-		LogMessage("STARTING RENDER THREAD...");
-		renderThread = new std::thread(&Potato::Graphics::Renderloop, this);
+		logger.LogMessage("STARTING RENDER THREAD...");
+		renderThread = new std::thread(&Potato::Graphics::renderloop, this);
 		renderThread->detach();
-		LogMessage("INITIALIZED!");
+		logger.LogMessage("INITIALIZED!");
 		return true;
 	}
 
-	void Graphics::Configure(map<string, vector<string>> options)
+	void Graphics::configure(map<string, vector<string>> options)
 		/* Allows engine to be configured, new config is save to config file */
 	{
 		map<string, vector<string>> config;
 		std::ofstream configFile;
 		string segment;
 
-		config = ConfigSegments();
+		config = configSegments();
 		for (auto i : options)
 		{
 			config[i.first] = i.second;
@@ -297,44 +261,63 @@ namespace Potato{
 		}
 
 		configFile.close();
-		LoadConfig();
+		loadConfig();
 	}
 
-	void Graphics::Update(vector<RenderObject*> list, int level)
-		/* Update the render vectors */
+	MapNode* Graphics::getNode(MapNode* grid, Pair location)
+		/* Returns a pointer to the mapnode at a given location */
 	{
-		while (update || !locked.try_lock())
-		{
-			Delay();
+		Pair origin = {0, 0};
+		if (location == origin) {
+			return grid;
 		}
-		LogMessage("UPDATING...");
-		app = true;
-		pending[level] = list;
-		update = true;
-		locked.unlock();
-	}
-
-	void Graphics::Update(RenderObject* obj, int level)
-	{
-		vector<RenderObject*> single;
-		single.push_back(obj);
-		Update(single, level);
-	}
-
-	void Graphics::Set(vector<vector<RenderObject*>> renderLists)
-		/* Set the render vectors */
-	{
-		while (update || !locked.try_lock())
-		{
-			Delay();
+		if (location.x == 0){
+			grid = grid->mask[6]; // Can't move E, move S
+			location.y--;
 		}
-		LogMessage("SETTING...");
-		pending = renderLists;
-		update = true;
-		locked.unlock();
+		else if (location.y == 0){
+			grid = grid->mask[4]; // Can't move S, move E
+			location.x--;
+		}
+		else{
+			grid = grid->mask[7]; // Move SE
+			location--;
+		}
+		return getNode(grid, location);
 	}
 
-	bool Graphics::Render(RenderObject *object)
+	void Graphics::update(BasicObject* obj, int level)
+		/* Update map with object */
+	{
+		MapNode* node;
+		node = getNode(gameMap, obj->grid);
+		padlock.lock();
+		node->addObject(obj, level);
+		padlock.lock();
+	}
+
+	Pair Graphics::getCameraGrid(void)
+		/* Return the grid that the camera originates in */
+	{
+		Pair location={0,0};
+		location.x = (camera.x / gridSize.x);
+		location.y = (camera.y / gridSize.y);
+		return location;
+	}
+
+	Pair Graphics::getCameraGridSize(void)
+		/* Return the number of grid cells encompassed by the camera */
+	{
+		double gridCell=0.0;
+		Pair size={0,0};
+		gridCell = ((double)cameraSize.x)/((double)gridSize.x);
+		size.x = (int)(gridCell) + 1;
+		gridCell = ((double)cameraSize.y)/((double)gridSize.y);
+		size.y = (int)(gridCell) + 1;
+		return size;
+	}
+
+	bool Graphics::renderObj(RenderObject *object, Pair coordinate)
 		/* This method renders an object on the screen with the given parameters */
 	{
 		SDL_Rect output;
@@ -351,8 +334,8 @@ namespace Potato{
 			return false;
 		}
 
-		output.x = object->coordinate.x;
-		output.y = object->coordinate.y;
+		output.x = coordinate.x;
+		output.y = coordinate.y;
 
 		input.x = object->locations[object->state].x;
 		input.y = object->locations[object->state].y;
@@ -364,58 +347,71 @@ namespace Potato{
 		return true;
 	}
 
-	void Graphics::Renderloop(void)
+	void Graphics::renderRow(MapNode* row, int width)
+		/* Recursively renders a row */
+	{
+		Pair screenPos = {0,0};
+
+		if (width == 0 || row == NULL){
+			return;
+		}
+
+		// Get coordinate of cell origin on screen
+		screenPos = (row->coordinate - getCameraGrid())*gridSize;
+
+		for (auto level : row->contents){
+			for (auto object : level){
+				renderObj(object->sprite, object->position + screenPos);
+			}
+		}
+
+		renderRow(row->mask[4], width--); // Move E
+	}
+
+	void Graphics::renderMap(MapNode* grid, int depth)
+		/* Recursively renders the map */
+	{
+		if (depth == 0 || grid == NULL) {
+			return;
+		}
+		renderRow(grid, getCameraGridSize().x); // Begin rendering this row
+		renderMap(grid->mask[6], depth--); // Move S
+	}
+
+	void Graphics::renderloop(void)
 		/* This is a constant loop run by a child thread, renders everything in
 		the render lists */
 	{
 		Uint32 startTick, endTick;
+		Pair currCamera={0,0};
 		running = true;
 		while (!kill)
 		{
-			if (update && locked.try_lock())
-			{
-				LogMessage("RENDER THREAD: UPDATING...");
-				if (!app)
-				{
-					current.clear();
-				}
-				app = false;
-				for (int i=0; i<4; i++){
-					current[i].insert(current[i].end(), pending[i].begin(), pending[i].end());
-				}
-				update = false;
-				locked.unlock();
-			}
 
+			padlock.lock();
 			startTick = (int)(SDL_GetTicks()/period);
-
-			for (auto renderlist : current)
-			{
-				for (auto object : renderlist)
-				{
-					Render(object); // Possible DLL error?
-				}
-			}
+			currCamera = getCameraGrid();
+			renderMap(getNode(gameMap, currCamera), currCamera.y);
 			SDL_Flip(display);
 			endTick = (int)(SDL_GetTicks()/period);
-			if ((startTick - endTick) != 0) {
-				Delay();
+			padlock.unlock();
+
+			if ((startTick - endTick) == 0) {
+				delay();
 			}
 		}
 		running = false;
 	}
 
-	void Graphics::LoadAssets(void)
+	void Graphics::loadAssets(void)
 		/* This method loads all art assets */
 	{
 		vector<string> info, animation;
 		RenderObject* object;
-		SDL_Rect* area;
 		string asset;
 		Pair pair;
-		SDL_Surface* temp;
 
-		LogMessage("LOADING ASSETS...");
+		logger.LogMessage("LOADING ASSETS...");
 
 		for (auto line : *Strings::GetLines("manifest"))
 			/* Each Asset */
@@ -436,8 +432,6 @@ namespace Potato{
 
 			// Default data
 			object->state=0;
-			object->coordinate.x=0;
-			object->coordinate.y=0;
 			object->lastUpdate=0;
 
 			// Loading the SDL_Surface
@@ -469,7 +463,7 @@ namespace Potato{
 		}
 	}
 
-	RenderObject* Graphics::CreateObject(string asset) {
+	RenderObject* Graphics::createObject(string asset) {
 		RenderObject *newObj;
 		if (assets.find(asset) != assets.end()) {
 			newObj = new RenderObject;
@@ -479,17 +473,19 @@ namespace Potato{
 		return NULL;
 	}
 
-	void Graphics::Cleanup(void)
+	void Graphics::cleanup(void)
 		/* Cleans & kills the graphics engine and its processes */
 	{
-		LogMessage("KILLING CHILD...");
+		logger.LogMessage("KILLING CHILD...");
 		kill = true;
-		while (running) { // If render thread is unresponsive this will never terminate
-			Delay();
+
+		// If render thread is unresponsive this will never terminate
+		while (running) {
+			delay();
 		}
 		kill = false;
 
-		LogMessage("CLEANING...");
+		logger.LogMessage("CLEANING...");
 		for (auto object : rawAssets)
 		{
 			SDL_FreeSurface(object.sprite);
@@ -500,17 +496,17 @@ namespace Potato{
 		IMG_Quit();
 		SDL_Quit();
 
-		LogMessage("PURGING VECTORS...");
+		logger.LogMessage("PURGING VECTORS...");
 
 		rawAssets.clear();
 		current.clear();
 		pending.clear();
 
-		LogMessage("RESETTING VARIABLES...");
+		logger.LogMessage("RESETTING VARIABLES...");
 
 		display = NULL;
 		frameRate = 60;
-		update = false;
+		updatePending = false;
 		period = (int)((1.0/frameRate)*1000);
 		res.x=1920;
 		res.y=1080;
@@ -519,14 +515,13 @@ namespace Potato{
 		INIT_FLAGS = 0x00000000;
 		VIDEO_FLAGS = 0x00000000;
 
-		LogMessage("CLEANED!");
+		logger.LogMessage("CLEANED!");
 	}
 }
 
 int _tmain(int argc, _TCHAR* argv[])
 {
 	Potato::Graphics engine;
-	logFile.close();
 	return 0;
 }
 
